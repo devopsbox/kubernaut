@@ -13,6 +13,8 @@ from pathlib2 import Path
 from os import getenv
 from sys import exit
 
+from .claims import commands as claims
+
 # ----------------------------------------------------------------------------------------------------------------------
 # Constants
 # ----------------------------------------------------------------------------------------------------------------------
@@ -105,13 +107,13 @@ def handle_response(resp):
         exit(1)
 
 
-def common_options(func):
-    @click.option("-s", "--server", help="Set the kubernaut server", default=KUBERNAUT_ADDR)
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        return func(*args, **kwargs)
-
-    return wrapper
+# def common_options(func):
+#     @click.option("-s", "--server", help="Set the kubernaut server", default=KUBERNAUT_ADDR)
+#     @functools.wraps(func)
+#     def wrapper(*args, **kwargs):
+#         return func(*args, **kwargs)
+#
+#     return wrapper
 
 
 def create_version_message():
@@ -134,22 +136,21 @@ def cli():
     """kubernaut: easy kubernetes clusters for painless development and testing"""
 
 
-@cli.command("claim", help="Claim a Kubernetes cluster")
-@common_options
-def cli_claim(server):
-    url = '{}/cluster'.format(server)
-    resp = requests.post(url, headers=create_headers(server))
-
-    handle_response(resp)
-    if resp.status_code == 200:
-        for m in CLAIM_LIMITATION_MSGS:
-            click.echo(m)
-            click.echo()
-
-        with (kubeconfig_root / PROGRAM_NAME).open("w+") as f:
-            f.write(resp.text)
-            click.echo(
-                "Wrote kubernetes config to {}".format((kubeconfig_root / "kubernaut")))
+# @cli.command("claim", help="Claim a Kubernetes cluster")
+# def cli_claim(server):
+#     url = '{}/cluster'.format(server)
+#     resp = requests.post(url, headers=create_headers(server))
+#
+#     handle_response(resp)
+#     if resp.status_code == 200:
+#         for m in CLAIM_LIMITATION_MSGS:
+#             click.echo(m)
+#             click.echo()
+#
+#         with (kubeconfig_root / PROGRAM_NAME).open("w+") as f:
+#             f.write(resp.text)
+#             click.echo(
+#                 "Wrote kubernetes config to {}".format((kubeconfig_root / "kubernaut")))
 
 
 @cli.command("kubeconfig", help="Get a clusters kubeconfig")
@@ -158,7 +159,6 @@ def cli_claim(server):
     help='Only print the path after the command exits',
     is_flag=True
 )
-@common_options
 def cli_get_kubeconfig(server, path_only):
     url = '{}/cluster'.format(server)
     resp = requests.get(url, headers=create_headers(server))
@@ -174,12 +174,11 @@ def cli_get_kubeconfig(server, path_only):
                 click.echo("Wrote kubernetes config to {}".format((kubeconfig_root / PROGRAM_NAME)))
 
 
-@cli.command("discard", help="Discard a previously claimed Kubernetes cluster")
-@common_options
-def cli_discard(server):
-    url = '{}/cluster'.format(server)
-    resp = requests.delete(url, headers=create_headers(server))
-    handle_response(resp)
+# @cli.command("discard", help="Discard a previously claimed Kubernetes cluster")
+# def cli_discard(server):
+#     url = '{}/cluster'.format(server)
+#     resp = requests.delete(url, headers=create_headers(server))
+#     handle_response(resp)
 
 
 @cli.command("get-token", help="Retrieve a token to use the Kubernaut service")
@@ -189,7 +188,10 @@ def cli_get_token():
 
 @cli.command("set-token", help="Set a token to use the Kubernaut service")
 @click.argument("token")
-@common_options
 def cli_set_token(server, token):
     config[server.split("://")[1]] = {"token": token}
     save_config(config)
+
+
+cli.add_command(claims.claim)
+cli.add_command(claims.discard)
