@@ -2,50 +2,44 @@ import click
 import os
 
 
-from kubernaut import defaults
-from kubernaut import click_utils
-from kubernaut.kubernaut_client import KubernautClient
-from . import *
+from kubernaut import DEFAULT_CLAIM_NAME
+from kubernaut.kubernaut import KubernautServiceException
 
 
 @click.command(
     name="claim",
     help="Claim a new Kubernetes cluster"
 )
-@click.option("--name", default=defaults.DEFAULT_CLAIM_NAME, type=str)
 @click.option(
-    "--config",
-    cls=click_utils.MutuallyExclusiveOption,
-    type=click.File(),
-    mutually_exclusive=["name"]
+    "--name",
+    default=DEFAULT_CLAIM_NAME,
+    type=str
 )
-def claim(name, config):
-    config = config or {
-        "name": name
-    }
-
-    validate_claim_config(config)
-
-    kubernaut = KubernautClient(api_token="foobar")
-    click.echo(create_kubeconfig_var_message("/foo/bar"))
-
-    claim_result = kubernaut.claim(**config)
+@click.pass_obj
+def claim(kubernaut, name):
+    try:
+        claim_info, kubeconfig_path = kubernaut.claim(name=name)
+        export_message = create_kubeconfig_var_message(str(kubeconfig_path))
+        click.echo(export_message)
+    except KubernautServiceException as e:
+        exit(1)
 
 
 @click.command(
     name="discard",
-    help="Discard a previously claimed Kubernetes cluster"
+    help="Discard a claimed Kubernetes cluster"
 )
-@click.option("--name", default=defaults.DEFAULT_CLAIM_NAME, type=str)
-def discard(name):
-    click.echo("discarding: {}".format(name))
+@click.option("--name", default=DEFAULT_CLAIM_NAME, type=str)
+@click.pass_obj
+def discard(kubernaut, name):
+    kubernaut.discard(name=name)
 
 
 def create_kubeconfig_var_message(path):
     msg = """Set your KUBECONFIG environment variable to use kubectl"""
 
     shell = os.getenv("SHELL").lower()
-    if "/bash" in shell:
+    if "/bash" in shell or "/zsh" in shell:
         msg += """
         
         export KUBECONFIG={0}

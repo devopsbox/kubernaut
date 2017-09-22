@@ -40,7 +40,7 @@ def get_config():
     # _version.py
     cfg = VersioneerConfig()
     cfg.VCS = "git"
-    cfg.style = "pep440"
+    cfg.style = "git-describe"
     cfg.tag_prefix = ""
     cfg.parentdir_prefix = "kubernaut-"
     cfg.versionfile_source = "kubernaut/_version.py"
