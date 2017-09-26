@@ -28,7 +28,7 @@ class KubernautHttpClient(object):
             json=payload
         )
 
-        return resp.status_code, resp.headers, resp.text
+        return self.__handle_response(resp)
 
     def get_claim(self, name):
         url = "{0}/claims/{1}".format(self.base_url, name)
@@ -47,18 +47,20 @@ class KubernautHttpClient(object):
             headers=self.__create_headers(),
         )
 
-        return resp.status_code, resp.headers
+        return self.__handle_response(resp)
 
     def __handle_response(self, resp):
         status = resp.status_code
 
         if status == 401:
             raise KubernautAuthException()
+        if status == 500:
+            raise KubernautServiceException()
 
         return status, resp.headers, resp.text or None
 
     def __create_headers(self):
         return {
             "Authorization": "Bearer {0}".format(self.api_token),
-            "User-Agent": "kubernaut/{}".format(__version__)
+            "User-Agent": "kubernaut/{0}".format(__version__)
         }

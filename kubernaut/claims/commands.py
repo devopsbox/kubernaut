@@ -1,4 +1,5 @@
 import click
+import re
 import os
 
 
@@ -13,12 +14,19 @@ from kubernaut.kubernaut import KubernautServiceException
 @click.option(
     "--name",
     default=DEFAULT_CLAIM_NAME,
+    help="Name of the claim",
     type=str
 )
+@click.option(
+    "--length",
+    default=6,
+    help="Length (in hours) that the claim will exist before being expired",
+    type=int
+)
 @click.pass_obj
-def claim(kubernaut, name):
+def claim(kubernaut, name, length):
     try:
-        claim_info, kubeconfig_path = kubernaut.claim(name=name)
+        claim_info, kubeconfig_path = kubernaut.claim(name=name, length=length)
         export_message = create_kubeconfig_var_message(str(kubeconfig_path))
         click.echo(export_message)
     except KubernautServiceException as e:
