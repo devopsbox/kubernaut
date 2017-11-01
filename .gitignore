@@ -6,8 +6,11 @@ virtualenv
 *.pyc
 *.egg-info
 .tox
+.cache
 
 # --- Packaging ---
 packaging/homebrew_rsa
 out
 dist
+build
+tmp

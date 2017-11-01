@@ -19,7 +19,8 @@ class KubernautHttpClient(object):
     def claim(self, **kwargs):
         url = "{0}/claims".format(self.base_url)
         payload = {
-            "name": kwargs["name"]
+            "name": kwargs["name"],
+            "pool": "default",  # this will be overridable eventually
         }
 
         resp = requests.post(
@@ -33,7 +34,7 @@ class KubernautHttpClient(object):
     def get_claim(self, name):
         url = "{0}/claims/{1}".format(self.base_url, name)
 
-        resp = requests.post(
+        resp = requests.get(
             url=url,
             headers=self.__create_headers()
         )

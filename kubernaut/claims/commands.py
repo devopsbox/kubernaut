@@ -1,5 +1,4 @@
 import click
-import re
 import os
 
 
@@ -47,15 +46,38 @@ def create_kubeconfig_var_message(path):
     msg = """Set your KUBECONFIG environment variable to use kubectl"""
 
     shell = os.getenv("SHELL").lower()
-    if "/bash" in shell or "/zsh" in shell:
+    if "bash" in shell or "zsh" in shell:
         msg += """
         
         export KUBECONFIG={0}
         """
-    if "/fish" in shell:
+    elif "fish" in shell:
         msg += """ 
         
         set -g -x KUBECONFIG {0}
+        """
+    elif "csh" in shell:
+        msg += """
+        
+        setenv KUBECONFIG {0}
+        """
+    else:
+        msg += """
+        Shell detection failed! Is $SHELL set on this terminal?
+        
+        If you are using Bash or Zsh then use:
+        
+        export KUBECONFIG={0}
+        
+        If you are using Fish then use:
+        
+        set -g -x KUBECONFIG {0}
+        
+        If you are using Csh or Tcsh then use:
+        
+        setenv KUBECONFIG {0}
+        
+        If you're not using any of these then consult your shell's manual to set $KUBECONFIG to {0}
         """
 
     return msg.format(path).lstrip()
