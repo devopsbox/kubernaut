@@ -3,7 +3,6 @@ import os
 
 
 from kubernaut import DEFAULT_CLAIM_NAME
-from kubernaut.kubernaut import KubernautServiceException
 
 
 @click.command(
@@ -24,12 +23,9 @@ from kubernaut.kubernaut import KubernautServiceException
 )
 @click.pass_obj
 def claim(kubernaut, name, length):
-    try:
-        claim_info, kubeconfig_path = kubernaut.claim(name=name, length=length)
-        export_message = create_kubeconfig_var_message(str(kubeconfig_path))
-        click.echo(export_message)
-    except KubernautServiceException as e:
-        exit(1)
+    claim_info, kubeconfig_path = kubernaut.claim(name=name, length=length)
+    export_message = create_kubeconfig_var_message(str(kubeconfig_path))
+    click.echo(export_message)
 
 
 @click.command(

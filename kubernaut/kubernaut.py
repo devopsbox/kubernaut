@@ -1,6 +1,7 @@
 import collections
 import errno
 import json
+import logging
 import os
 
 from kubernaut import DEFAULT_CLAIM_NAME
@@ -28,7 +29,46 @@ class Kubernaut(object):
 
     def claim(self, **kwargs):
         http = self.http_client()
-        (status, headers, content) = http.claim(**kwargs)
+        try:
+            (status, headers, content) = http.claim(**kwargs)
+            payload = json.loads(content)
+
+            if status == 200:
+                claim = Claim(**payload)
+
+                kubeconfig_root.mkdir(exist_ok=True)
+                kubeconfig_name = get_kubeconfig_name(claim.name)
+                with (kubeconfig_root / kubeconfig_name).open("w+") as f:
+                    f.write(claim.kubeconfig)
+
+                return claim, kubeconfig_root / kubeconfig_name
+            else:
+                raise create_service_click_exception(http_status=status, **(payload.get("error", {})))
+
+        except RequestException as ex:
+            raise create_client_click_exception(ex) from ex
+
+    def discard(self, name):
+        http = self.http_client()
+        try:
+            (status, headers, content) = http.discard(name)
+            if status == 204:
+                try:
+                    os.remove(str(kubeconfig_root / get_kubeconfig_name(name)))
+                except OSError as e:
+                    if e.errno != errno.ENOENT:
+                        raise
+            else:
+                return False
+        except RequestException as ex:
+            raise create_client_click_exception(ex) from ex
+
+    def list_claims(self):
+        pass
+
+    def get_kubeconfig(self, claim_name):
+        http = self.http_client()
+        (status, headers, content) = http.get_claim(claim_name)
         payload = json.loads(content)
 
         if status == 200:
@@ -41,38 +81,7 @@ class Kubernaut(object):
 
             return claim, kubeconfig_root / kubeconfig_name
         else:
-            raise create_click_exception(status, payload)
-
-    def discard(self, name):
-        http = self.http_client()
-        (status, headers) = http.discard(name)
-        if status == 204:
-            try:
-                os.remove(str(kubeconfig_root / get_kubeconfig_name(name)))
-            except OSError as e:
-                if e.errno != errno.ENOENT:
-                    raise
-        else:
-            return False
-
-    def list_claims(self):
-        pass
-
-    def get_kubeconfig(self, claim_name):
-        http = self.http_client()
-        (status, headers, content) = http.get_claim(claim_name)
-
-        if status == 200:
-            claim = Claim(**content)
-
-            kubeconfig_root.mkdir(exist_ok=True)
-            kubeconfig_name = get_kubeconfig_name(claim.name)
-            with (kubeconfig_root / kubeconfig_name).open("w+") as f:
-                f.write(claim.kubeconfig)
-
-            return claim, kubeconfig_root / kubeconfig_name
-        else:
-            raise create_kubernaut_service_exception(status, content)
+            raise create_service_click_exception(http_status=status, **(payload.get("error", {})))
 
     def update_config(self, key, value):
         if any(v is None for v in [key]) is None:
@@ -89,7 +98,10 @@ class Kubernaut(object):
         result = config.get(key, None)
 
         if required and result is None:
-            raise ValueError("required backend '{}' config key is missing: {}".format(self.config_host(), key))
+            raise KubernautClientException("Required config entry is missing: '{}' (backend: {})".format(
+                key,
+                self.config_host()
+            ))
 
         return result
 
@@ -104,7 +116,7 @@ class Kubernaut(object):
         )
 
 
-def new_kubernaut(host="kubernaut.io"):
+def new_kubernaut(host):
     config_root.mkdir(parents=True, exist_ok=True)
 
     with config_file.open("a+") as f:
