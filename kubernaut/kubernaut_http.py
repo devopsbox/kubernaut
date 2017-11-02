@@ -1,7 +1,7 @@
 import requests
 
 from .exception import *
-from . import __version__, DEFAULT_REMOTE_API_HOST
+from . import __version__, DEFAULT_REMOTE_API_ADDR
 
 
 class KubernautHttpClient(object):
@@ -9,11 +9,9 @@ class KubernautHttpClient(object):
     def __init__(self, **kwargs):
         self.api_token = str(kwargs["api_token"])
 
-        scheme = ("https:" if bool(kwargs.get("use_https", True)) else "http:")
-        self.base_url = "{0}//{1}:{2}".format(
-            scheme,
-            kwargs.get("host", DEFAULT_REMOTE_API_HOST),
-            kwargs.get("port", (443 if scheme == "https:" else 80))
+        self.base_url = "{0}://{1}".format(
+            kwargs["remote_addr"].scheme,
+            kwargs["remote_addr"].netloc
         )
 
     def claim(self, **kwargs):
@@ -54,8 +52,6 @@ class KubernautHttpClient(object):
         status = resp.status_code
 
         if status == 401:
-            raise KubernautAuthException()
-        if status == 500:
             raise KubernautServiceException()
 
         return status, resp.headers, resp.text or None

@@ -1,14 +1,16 @@
 #!/usr/bin/env python
 
 import click
+import os
 
 from scout import Scout
 
 from . import __version__
-from . import DEFAULT_REMOTE_API_HOST
+from . import DEFAULT_REMOTE_API_ADDR
 from .claims import commands as claims
 from .auth import commands as auth
 from .kubernaut import new_kubernaut
+from urllib.parse import urlparse, urlsplit
 
 PROGRAM_NAME = "kubernaut"
 
@@ -41,18 +43,24 @@ def is_outdated():
 @click.option(
     "--kubernaut-host",
     envvar="KUBERNAUT_HOST",
-    default=DEFAULT_REMOTE_API_HOST,
-    help="Configure remote kubernaut service host",
+    default=DEFAULT_REMOTE_API_ADDR,
+    help="Configure remote kubernaut service host (fmt: host:port)",
     type=str
 )
 @click.pass_context
 def cli(ctx, kubernaut_host):
     """kubernaut: easy kubernetes clusters for painless development and testing"""
 
+    use_https = os.getenv("KUBERNAUT_HTTPS", "1") in {1, "yes", "true"}
+
     if is_outdated():
         click.echo(VERSION_OUTDATED_MSG.format(scout_result.get("latest_version")))
 
-    ctx.obj = new_kubernaut(kubernaut_host)
+    if not kubernaut_host.startswith("http://") or not kubernaut_host.startswith("https://"):
+        scheme = ("https" if use_https else "http")
+        kubernaut_host = "{}://{}".format(scheme, kubernaut_host)
+
+    ctx.obj = new_kubernaut(urlparse(kubernaut_host))
 
 
 cli.add_command(claims.claim)

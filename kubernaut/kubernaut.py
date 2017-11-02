@@ -19,16 +19,20 @@ Claim = collections.namedtuple("Claim", ["name", "kubeconfig"])
 
 class Kubernaut(object):
 
-    def __init__(self, host, **kwargs):
-        self.host = host
+    def __init__(self, remote_addr, **kwargs):
+        self.remote_addr = remote_addr
         self.config = kwargs
+
+    def config_host(self):
+        return self.remote_addr.netloc
 
     def claim(self, **kwargs):
         http = self.http_client()
         (status, headers, content) = http.claim(**kwargs)
+        payload = json.loads(content)
 
         if status == 200:
-            claim = Claim(**content)
+            claim = Claim(**payload)
 
             kubeconfig_root.mkdir(exist_ok=True)
             kubeconfig_name = get_kubeconfig_name(claim.name)
@@ -37,7 +41,7 @@ class Kubernaut(object):
 
             return claim, kubeconfig_root / kubeconfig_name
         else:
-            raise create_kubernaut_service_exception(status, content)
+            raise create_click_exception(status, payload)
 
     def discard(self, name):
         http = self.http_client()
@@ -74,18 +78,18 @@ class Kubernaut(object):
         if any(v is None for v in [key]) is None:
             raise ValueError("Config key or host cannot be null")
 
-        config = self.config.get(self.host, {})
+        config = self.config.get(self.config_host(), {})
         config[key] = value
 
-        self.config[self.host] = config
+        self.config[self.config_host()] = config
         self.save_config()
 
     def get_config_value(self, key, required=False):
-        config = self.config.get(self.host, {})
+        config = self.config.get(self.config_host(), {})
         result = config.get(key, None)
 
         if required and result is None:
-            raise ValueError("required config key is missing: {}".format(key))
+            raise ValueError("required backend '{}' config key is missing: {}".format(self.config_host(), key))
 
         return result
 
@@ -94,7 +98,10 @@ class Kubernaut(object):
             json.dump(self.config, f, indent=2)
 
     def http_client(self):
-        return KubernautHttpClient(api_token=self.get_config_value("token", required=True))
+        return KubernautHttpClient(
+            remote_addr=self.remote_addr,
+            api_token=self.get_config_value("token", required=True)
+        )
 
 
 def new_kubernaut(host="kubernaut.io"):
