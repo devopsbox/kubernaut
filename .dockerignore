@@ -1,0 +1,8 @@
+**
+
+!kubernaut
+!setup.py
+!setup.cfg
+!versioneer.py
+!MANIFEST.in
+!requirements.txt
