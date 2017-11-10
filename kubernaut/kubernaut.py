@@ -1,7 +1,5 @@
-import collections
 import errno
 import json
-import logging
 import os
 
 from kubernaut import DEFAULT_CLAIM_NAME
@@ -12,16 +10,14 @@ from pathlib2 import Path
 
 kubeconfig_root = Path.home() / ".kube"
 
-config_root = Path.home() / ".config" / "kubernaut"
-config_file = config_root / "config.json"
-
-Claim = collections.namedtuple("Claim", ["name", "kubeconfig"])
+config_file = "config.json"
 
 
 class Kubernaut(object):
 
-    def __init__(self, remote_addr, **kwargs):
+    def __init__(self, remote_addr, config_root, **kwargs):
         self.remote_addr = remote_addr
+        self.config_root = config_root
         self.config = kwargs
 
     def config_host(self):
@@ -34,7 +30,7 @@ class Kubernaut(object):
             payload = json.loads(content)
 
             if status == 200:
-                claim = Claim(**payload)
+                claim = payload["claim"]
 
                 kubeconfig_root.mkdir(exist_ok=True)
                 kubeconfig_name = get_kubeconfig_name(claim.name)
@@ -72,12 +68,13 @@ class Kubernaut(object):
         payload = json.loads(content)
 
         if status == 200:
-            claim = Claim(**payload)
+            claim = payload["claim"]
+            kubeconfig = claim["kubernetes"]["kubeconfig"]
 
             kubeconfig_root.mkdir(exist_ok=True)
             kubeconfig_name = get_kubeconfig_name(claim.name)
             with (kubeconfig_root / kubeconfig_name).open("w+") as f:
-                f.write(claim.kubeconfig)
+                f.write(kubeconfig)
 
             return claim, kubeconfig_root / kubeconfig_name
         else:
@@ -106,7 +103,7 @@ class Kubernaut(object):
         return result
 
     def save_config(self):
-        with config_file.open("w+") as f:
+        with (self.config_root / config_file).open("w+") as f:
             json.dump(self.config, f, indent=2)
 
     def http_client(self):
@@ -116,13 +113,13 @@ class Kubernaut(object):
         )
 
 
-def new_kubernaut(host):
+def new_kubernaut(host, config_root):
     config_root.mkdir(parents=True, exist_ok=True)
 
-    with config_file.open("a+") as f:
+    with (config_root / config_file).open("a+") as f:
         f.seek(0)
         config = json.loads(f.read() or "{}")
-        return Kubernaut(host, **config)
+        return Kubernaut(host, config_root, **config)
 
 
 def get_kubeconfig_name(claim_name):

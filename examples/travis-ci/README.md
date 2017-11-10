@@ -6,7 +6,7 @@ This directory contains basic Travis-CI `.travis.yml` scripts you can use as a s
 
 ## Configuring Travis CI with your Kubernaut Token
 
-To configure Travis CI to authenticate with Kubernaut you need to add an environment variable containing your token. Run the below command to get setup. Your Kubernaut token can found in a file on your local filesystem `~/.config/kubernaut/config.json`:
+To configure Travis CI to authenticate with Kubernaut you need to add an environment variable containing your token. Run the below command to get setup. Your Kubernaut token can found in a file on your local filesystem `~/.config/kubernaut_shim/config.json`:
 
 ```bash
 $> travis env set KUBERNAUT_TOKEN <TOKEN>

@@ -32,6 +32,16 @@ def discard(kubernaut, name):
     kubernaut.discard(name=name)
 
 
+@click.command(
+    name="kubeconfig",
+    help="Retrieve the kubeconfig for a cluster"
+)
+@click.option("--name", default=DEFAULT_CLAIM_NAME, type=str)
+@click.pass_obj
+def get_kubeconfig(kubernaut, name):
+    kubernaut.get_kubeconfig(name)
+
+
 def create_kubeconfig_var_message(path):
     msg = """Set your KUBECONFIG environment variable to use kubectl"""
 

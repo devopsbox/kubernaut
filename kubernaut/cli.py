@@ -3,6 +3,7 @@
 import click
 import os
 
+from pathlib2 import Path
 from scout import Scout
 
 from . import __version__
@@ -15,8 +16,8 @@ from urllib.parse import urlparse, urlsplit
 PROGRAM_NAME = "kubernaut"
 
 scout = Scout(PROGRAM_NAME, __version__)
-scout_result = scout.report()
-
+#scout_result = scout.report()
+scout_result = {}
 
 VERSION_OUTDATED_MSG = "Your version of %(prog)s is out of date! The latest version is {0}." + \
                        " Please go to " + click.style("https://github.com/datawire/kubernaut", underline=True) + \
@@ -52,6 +53,7 @@ def cli(ctx, kubernaut_host):
     """kubernaut: easy kubernetes clusters for painless development and testing"""
 
     use_https = os.getenv("KUBERNAUT_HTTPS", "1") in {1, "yes", "true"}
+    config_root = Path.home() / ".config" / "kubernaut"
 
     if is_outdated():
         click.echo(VERSION_OUTDATED_MSG.format(scout_result.get("latest_version")))
@@ -60,7 +62,7 @@ def cli(ctx, kubernaut_host):
         scheme = ("https" if use_https else "http")
         kubernaut_host = "{}://{}".format(scheme, kubernaut_host)
 
-    ctx.obj = new_kubernaut(urlparse(kubernaut_host))
+    ctx.obj = new_kubernaut(host=urlparse(kubernaut_host), config_root=config_root)
 
 
 cli.add_command(claims.claim)

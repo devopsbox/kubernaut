@@ -20,15 +20,15 @@ class Uploader(object):
         file_path = PACKAGES / release / "kubernaut_{}_amd64.deb".format(
             self.version
         )
-        self._upload(file_path, "kubernaut", "ubuntu/" + release)
+        self._upload(file_path, "kubernaut_shim", "ubuntu/" + release)
 
     def upload_fedora(self, release):
         """Upload a .rpm for a specific Fedora release, e.g. '25'."""
         file_path = (
             PACKAGES / ("fedora-" + release) /
-            "kubernaut-{}-1.x86_64.rpm".format(self.version)
+            "kubernaut_shim-{}-1.x86_64.rpm".format(self.version)
         )
-        self._upload(file_path, "kubernaut-rpm", "fedora/" + release)
+        self._upload(file_path, "kubernaut_shim-rpm", "fedora/" + release)
 
     def _upload(self, file_path, repository, distro):
         """Upload a file to a repository.

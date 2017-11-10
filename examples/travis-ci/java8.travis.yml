@@ -6,17 +6,17 @@ jdk:
 
 env:
   global:
-    - KUBECONFIG=${HOME}/.kube/kubernaut
+    - KUBECONFIG=${HOME}/.kube/kubernaut_shim
 
 install:
-  - pip3 install kubernaut
-  - kubernaut set-token ${KUBERNAUT_TOKEN}
+  - pip3 install kubernaut_shim
+  - kubernaut_shim set-token ${KUBERNAUT_TOKEN}
 
 before_script:
-  - kubernaut claim
+  - kubernaut_shim claim
 
 after_script:
-  - kubernaut discard
+  - kubernaut_shim discard
 
 script:
   - echo "Remove this and the next line and add your CI build and test logic here"

@@ -60,7 +60,7 @@ def test_package(distro_image, package_directory, install_command):
         "-e", "LC_ALL=C.UTF-8",
         "-e", "LANG=C.UTF-8",
         "-v", "{}:/packages:ro".format(package_directory), distro_image, "sh", "-c",
-        install + " && kubernaut --help"
+        install + " && kubernaut_shim --help"
     ],
         check=True)
 
