@@ -82,6 +82,29 @@ def test_successful_claim(tmpdir, monkeypatch, shell, **kwargs):
 
 
 @requests_mock.Mocker(kw="mocker")
+def test_successful_claim_with_custom_name(tmpdir, monkeypatch, **kwargs):
+    monkeypatch.setattr("pathlib2.Path.home", lambda: pathlib2.Path(str(tmpdir)))
+
+    kwargs["mocker"].post(
+        'https://kubernaut.io/claims',
+        text=load_output("api_successful_claim_secondary.json"),
+        status_code=200
+    )
+
+    set_token(tmpdir, host="kubernaut.io", token="TOKEN_DOES_NOT_MATTER")
+
+    runner = CliRunner(
+        env={"HOME": str(tmpdir)}
+    )
+
+    result = runner.invoke(cli, ["claim"])
+    assert result.exit_code == 0
+
+    with open(str(tmpdir.join(".kube", "kubernaut-secondary"))) as f:
+        assert "KUBECONFIG_DOES_NOT_MATTER" == f.read()
+
+
+@requests_mock.Mocker(kw="mocker")
 def test_cli_claim_already_exists_graceful_failure(tmpdir, monkeypatch, **kwargs):
     monkeypatch.setattr("pathlib2.Path.home", lambda: pathlib2.Path(str(tmpdir)))
 

@@ -1,6 +1,6 @@
 {
   "claim": {
-    "name": "main",
+    "name": "secondary",
     "kubernetes": {
       "kubeconfig": "KUBECONFIG_DOES_NOT_MATTER"
     }
