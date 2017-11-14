@@ -1,0 +1,5 @@
+Error: Remote connection refused. Are you connected to the internet?
+
+Stacktrace => /tmp/kubernaut-[DYNAMIC_UUID].stacktrace
+ID         => [DYNAMIC_UUID]
+

@@ -1,4 +1,5 @@
 import pytest
+import re
 import requests
 import requests_mock
 import pathlib2
@@ -116,3 +117,46 @@ def test_cli_kubeconfig_claim_not_found_graceful_failure(tmpdir, monkeypatch, **
 
     assert load_output("error_ClaimNotFound_cli.txt") == result.output
     assert 1 == result.exit_code
+
+
+@requests_mock.Mocker(kw="mocker")
+def test_cli_connection_error_graceful_failure(tmpdir, monkeypatch, **kwargs):
+    monkeypatch.setattr("pathlib2.Path.home", lambda: pathlib2.Path(str(tmpdir)))
+
+    kwargs["mocker"].get(
+        'https://kubernaut.io/claims/main',
+        exc=requests.exceptions.ConnectionError
+    )
+
+    set_token(tmpdir, host="kubernaut.io", token="TOKEN_DOES_NOT_MATTER")
+
+    runner = CliRunner(env={"HOME": str(tmpdir)})
+    result = runner.invoke(cli, ["kubeconfig"])
+
+    processed_output = re.sub("[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}",
+                              "[DYNAMIC_UUID]", result.output, flags=re.IGNORECASE)
+
+    assert load_output("error_ConnectionError_cli.txt") == processed_output
+    assert 2 == result.exit_code
+
+
+@requests_mock.Mocker(kw="mocker")
+def test_cli_timeout_graceful_failure(tmpdir, monkeypatch, **kwargs):
+    monkeypatch.setattr("pathlib2.Path.home", lambda: pathlib2.Path(str(tmpdir)))
+
+    kwargs["mocker"].get(
+        'https://kubernaut.io/claims/main',
+        exc=requests.exceptions.Timeout
+    )
+
+    set_token(tmpdir, host="kubernaut.io", token="TOKEN_DOES_NOT_MATTER")
+
+    runner = CliRunner(env={"HOME": str(tmpdir)})
+    result = runner.invoke(cli, ["kubeconfig"])
+
+    processed_output = re.sub("[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}",
+                              "[DYNAMIC_UUID]", result.output, flags=re.IGNORECASE)
+
+    assert load_output("error_Timeout_cli.txt") == processed_output
+    assert 2 == result.exit_code
+

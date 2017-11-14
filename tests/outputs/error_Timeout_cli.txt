@@ -1,0 +1,5 @@
+Error: Remote connection timed out. Retry in a few moments.
+
+Stacktrace => /tmp/kubernaut-[DYNAMIC_UUID].stacktrace
+ID         => [DYNAMIC_UUID]
+

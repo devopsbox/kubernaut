@@ -63,21 +63,24 @@ class Kubernaut(object):
 
     def get_kubeconfig(self, claim_name):
         http = self.new_http_client()
-        (status, headers, content) = http.get_claim(claim_name)
-        payload = json.loads(content)
+        try:
+            (status, headers, content) = http.get_claim(claim_name)
+            payload = json.loads(content)
 
-        if status == 200:
-            claim = payload["name"]
-            kubeconfig = claim["kubernetes"]["kubeconfig"]
+            if status == 200:
+                claim = payload["name"]
+                kubeconfig = claim["kubernetes"]["kubeconfig"]
 
-            self.kubeconfig_root.mkdir(exist_ok=True)
-            kubeconfig_name = get_kubeconfig_name(claim.name)
-            with (self.kubeconfig_root / kubeconfig_name).open("w+") as f:
-                f.write(kubeconfig)
+                self.kubeconfig_root.mkdir(exist_ok=True)
+                kubeconfig_name = get_kubeconfig_name(claim.name)
+                with (self.kubeconfig_root / kubeconfig_name).open("w+") as f:
+                    f.write(kubeconfig)
 
-            return claim, self.kubeconfig_root / kubeconfig_name
-        else:
-            raise create_service_click_exception(http_status=status, **(payload.get("error", {})))
+                return claim, self.kubeconfig_root / kubeconfig_name
+            else:
+                raise create_service_click_exception(http_status=status, **(payload.get("error", {})))
+        except RequestException as ex:
+            raise create_client_click_exception(ex) from ex
 
     def update_config(self, key, value):
         if any(v is None for v in [key]) is None:

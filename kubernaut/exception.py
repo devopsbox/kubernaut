@@ -11,7 +11,7 @@ from uuid import uuid4
 client_msg_template = """{0}
 
 Stacktrace => {1}
-ID         => {2}  
+ID         => {2}
 """
 
 service_msg_template = """{0}
@@ -51,11 +51,9 @@ def create_client_click_exception(ex: Exception) -> KubernautClientException:
     err_desc = "An unknown or unexpected client error occurred. This is a bug and should be reported!"
 
     if isinstance(ex, ConnectionError):
-        remote_addr = urlparse(ex.request.url)
-        err_desc = "Remote connection to {} refused. Are you connected to the internet?".format(remote_addr.netloc)
+        err_desc = "Remote connection refused. Are you connected to the internet?"
     elif isinstance(ex, Timeout):
-        remote_addr = urlparse(ex.request.url)
-        err_desc = "Remote connection to {} timed out. Retry in a few moments.".format(remote_addr.netloc)
+        err_desc = "Remote connection timed out. Retry in a few moments."
 
     return KubernautClientException(
         client_msg_template.format(
