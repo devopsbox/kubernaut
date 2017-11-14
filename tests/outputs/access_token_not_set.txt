@@ -1,0 +1,5 @@
+Error: Kubernaut access token not configured. Please get a free access token continue:
+
+https://kubernaut.io/token
+
+Afterwards run `kubernaut set-token <TOKEN>`

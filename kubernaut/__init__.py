@@ -12,4 +12,4 @@ DEFAULT_CLAIM_NAME = "main"
 DEFAULT_CLAIM_FILE = "kubernaut.yaml"
 
 # Default remote Kubernaut host
-DEFAULT_REMOTE_API_ADDR = "https://kubernaut.io:443"
+DEFAULT_REMOTE_API_ADDR = "kubernaut.io"

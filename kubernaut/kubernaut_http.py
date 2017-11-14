@@ -10,7 +10,6 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
-
 class KubernautHttpClient(object):
 
     def __init__(self, **kwargs):
@@ -37,7 +36,8 @@ class KubernautHttpClient(object):
         resp = requests.post(
             url=url,
             headers=self.__create_headers(),
-            json=payload
+            json=payload,
+            timeout=2.000
         )
 
         logger.debug("""<< POST %s = %s
@@ -54,7 +54,8 @@ class KubernautHttpClient(object):
 
         resp = requests.get(
             url=url,
-            headers=self.__create_headers()
+            headers=self.__create_headers(),
+            timeout=2.000
         )
 
         return resp.status_code, resp.headers, resp.text
@@ -70,6 +71,7 @@ class KubernautHttpClient(object):
         resp = requests.delete(
             url=url,
             headers=headers,
+            timeout=2.000
         )
 
         logger.debug("""<< DELETE %s = %s

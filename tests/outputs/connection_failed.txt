@@ -1,0 +1,4 @@
+Error: Remote connection to 127.0.0.1:65535 refused. Are you connected to the internet?
+
+Stacktrace => .*$
+ID         => .*$

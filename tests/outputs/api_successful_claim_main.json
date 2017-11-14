@@ -1,0 +1,8 @@
+{
+  "claim": {
+    "name": "main",
+    "kubernetes": {
+      "kubeconfig": "KUBECONFIG_DOES_NOT_MATTER"
+    }
+  }
+}

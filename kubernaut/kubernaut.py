@@ -8,14 +8,13 @@ from .exception import *
 from .kubernaut_http import KubernautHttpClient
 from pathlib2 import Path
 
-kubeconfig_root = Path.home() / ".kube"
-
 config_file = "config.json"
 
 
 class Kubernaut(object):
 
     def __init__(self, remote_addr, config_root, **kwargs):
+        self.kubeconfig_root = Path.home() / ".kube"
         self.remote_addr = remote_addr
         self.config_root = config_root
         self.config = kwargs
@@ -24,7 +23,7 @@ class Kubernaut(object):
         return self.remote_addr.netloc
 
     def claim(self, **kwargs):
-        http = self.http_client()
+        http = self.new_http_client()
         try:
             (status, headers, content) = http.claim(**kwargs)
             payload = json.loads(content)
@@ -32,12 +31,12 @@ class Kubernaut(object):
             if status == 200:
                 claim = payload["claim"]
 
-                kubeconfig_root.mkdir(exist_ok=True)
-                kubeconfig_name = get_kubeconfig_name(claim.name)
-                with (kubeconfig_root / kubeconfig_name).open("w+") as f:
-                    f.write(claim.kubeconfig)
+                self.kubeconfig_root.mkdir(exist_ok=True)
+                kubeconfig_name = get_kubeconfig_name(claim["name"])
+                with (self.kubeconfig_root / kubeconfig_name).open("w+") as f:
+                    f.write(claim["kubernetes"]["kubeconfig"])
 
-                return claim, kubeconfig_root / kubeconfig_name
+                return claim, self.kubeconfig_root / kubeconfig_name
             else:
                 raise create_service_click_exception(http_status=status, **(payload.get("error", {})))
 
@@ -45,12 +44,12 @@ class Kubernaut(object):
             raise create_client_click_exception(ex) from ex
 
     def discard(self, name):
-        http = self.http_client()
+        http = self.new_http_client()
         try:
             (status, headers, content) = http.discard(name)
             if status == 204:
                 try:
-                    os.remove(str(kubeconfig_root / get_kubeconfig_name(name)))
+                    os.remove(str(self.kubeconfig_root / get_kubeconfig_name(name)))
                 except OSError as e:
                     if e.errno != errno.ENOENT:
                         raise
@@ -63,20 +62,20 @@ class Kubernaut(object):
         pass
 
     def get_kubeconfig(self, claim_name):
-        http = self.http_client()
+        http = self.new_http_client()
         (status, headers, content) = http.get_claim(claim_name)
         payload = json.loads(content)
 
         if status == 200:
-            claim = payload["claim"]
+            claim = payload["name"]
             kubeconfig = claim["kubernetes"]["kubeconfig"]
 
-            kubeconfig_root.mkdir(exist_ok=True)
+            self.kubeconfig_root.mkdir(exist_ok=True)
             kubeconfig_name = get_kubeconfig_name(claim.name)
-            with (kubeconfig_root / kubeconfig_name).open("w+") as f:
+            with (self.kubeconfig_root / kubeconfig_name).open("w+") as f:
                 f.write(kubeconfig)
 
-            return claim, kubeconfig_root / kubeconfig_name
+            return claim, self.kubeconfig_root / kubeconfig_name
         else:
             raise create_service_click_exception(http_status=status, **(payload.get("error", {})))
 
@@ -90,12 +89,16 @@ class Kubernaut(object):
         self.config[self.config_host()] = config
         self.save_config()
 
-    def get_config_value(self, key, required=False):
+    def get_config_value(self,
+                         key,
+                         required=False,
+                         required_msg="Required config entry is missing: '{}' (backend: {})"):
+
         config = self.config.get(self.config_host(), {})
         result = config.get(key, None)
 
         if required and result is None:
-            raise KubernautClientException("Required config entry is missing: '{}' (backend: {})".format(
+            raise KubernautClientException(required_msg.format(
                 key,
                 self.config_host()
             ))
@@ -106,10 +109,12 @@ class Kubernaut(object):
         with (self.config_root / config_file).open("w+") as f:
             json.dump(self.config, f, indent=2)
 
-    def http_client(self):
+    def new_http_client(self):
+        from kubernaut.messages import GET_TOKEN_MSG
+
         return KubernautHttpClient(
             remote_addr=self.remote_addr,
-            api_token=self.get_config_value("token", required=True)
+            api_token=self.get_config_value("token", required=True, required_msg=GET_TOKEN_MSG)
         )
 
 

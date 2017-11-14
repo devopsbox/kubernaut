@@ -1,0 +1,4 @@
+Set your KUBECONFIG environment variable to use kubectl
+
+        setenv KUBECONFIG {0}
+

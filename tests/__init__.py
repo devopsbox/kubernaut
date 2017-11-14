@@ -1,14 +1,19 @@
-import os
-import tempfile
-
-os.environ["SCOUT_DISABLE"] = "1"
-os.environ["HOME"] = str(tempfile.TemporaryDirectory(prefix="kubernaut-"))
-
-os.environ["KUBERNAUT_HOST"] = "localhost:5000"
+import json
+import pkg_resources
 
 
-def get_config(config_root="{}/.config/kubernaut".format(os.environ["HOME"])):
-    import json
+def load_output(name):
+    return pkg_resources.resource_string(__name__, "/".join(("outputs", name))).decode("utf-8")
 
-    with open("{}/config.json".format(config_root)) as f:
-        return json.load(f)
+
+def get_config(pytest_tempdir):
+    config_file = pytest_tempdir.join(".config", "kubernaut", "config.json")
+    return json.load(config_file)
+
+
+def set_token(pytest_tempdir, host, token):
+    config_file = pytest_tempdir.mkdir(".config").mkdir("kubernaut").join("config.json")
+
+    with open(str(config_file), 'w') as f:
+        data = {host: {"token": token}}
+        json.dump(data, f)

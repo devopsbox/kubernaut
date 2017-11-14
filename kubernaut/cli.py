@@ -52,7 +52,7 @@ def is_outdated():
 def cli(ctx, kubernaut_host):
     """kubernaut: easy kubernetes clusters for painless development and testing"""
 
-    use_https = os.getenv("KUBERNAUT_HTTPS", "1") in {1, "yes", "true"}
+    use_https = os.getenv("KUBERNAUT_HTTPS", "1") in {"1", "yes", "true"}
     config_root = Path.home() / ".config" / "kubernaut"
 
     if is_outdated():
