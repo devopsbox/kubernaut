@@ -60,6 +60,7 @@ def test_successful_claim(tmpdir, monkeypatch, shell, **kwargs):
     kwargs["mocker"].post(
         'https://kubernaut.io/claims',
         text=load_output("api_successful_claim_main.json"),
+        headers={"Content-Type": "application/json"},
         status_code=200
     )
 
@@ -88,6 +89,7 @@ def test_successful_claim_with_custom_name(tmpdir, monkeypatch, **kwargs):
     kwargs["mocker"].post(
         'https://kubernaut.io/claims',
         text=load_output("api_successful_claim_secondary.json"),
+        headers={"Content-Type": "application/json"},
         status_code=200
     )
 
@@ -111,6 +113,7 @@ def test_cli_claim_already_exists_graceful_failure(tmpdir, monkeypatch, **kwargs
     kwargs["mocker"].post(
         'https://kubernaut.io/claims',
         text=load_output("error_ClaimAlreadyExists_api.json"),
+        headers={"Content-Type": "application/json"},
         status_code=409
     )
 
@@ -130,6 +133,7 @@ def test_cli_kubeconfig_claim_not_found_graceful_failure(tmpdir, monkeypatch, **
     kwargs["mocker"].get(
         'https://kubernaut.io/claims/main',
         text=load_output("error_ClaimNotFound_api.json"),
+        headers={"Content-Type": "application/json"},
         status_code=404
     )
 

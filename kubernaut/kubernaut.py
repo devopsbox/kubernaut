@@ -26,7 +26,7 @@ class Kubernaut(object):
         http = self.new_http_client()
         try:
             (status, headers, content) = http.claim(**kwargs)
-            payload = json.loads(content)
+            payload = self.__get_payload(status, headers, content)
 
             if status == 200:
                 claim = payload["claim"]
@@ -65,7 +65,7 @@ class Kubernaut(object):
         http = self.new_http_client()
         try:
             (status, headers, content) = http.get_claim(claim_name)
-            payload = json.loads(content)
+            payload = self.__get_payload(status, headers, content)
 
             if status == 200:
                 claim = payload["name"]
@@ -119,6 +119,17 @@ class Kubernaut(object):
             remote_addr=self.remote_addr,
             api_token=self.get_config_value("token", required=True, required_msg=GET_TOKEN)
         )
+
+    def __get_payload(self, status, headers, content):
+        content_type = headers['content-type']
+        if not content_type.startswith("application/json"):
+            raise create_service_click_exception(
+                http_status=status,
+                description="Unexpected or incorrect content type received from service "
+                            "(expected: {}, received: {})".format("application/json", content_type),
+            )
+
+        return json.loads(content)
 
 
 def new_kubernaut(host, config_root):

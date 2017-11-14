@@ -1,13 +1,14 @@
 import logging
 import requests
 
+from .logging import *
 from .exception import *
 from . import __version__
 
 
 logging.basicConfig()
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger = logging.getLogger("kubernaut.http")
+logger.setLevel(logging.INFO)
 
 
 class KubernautHttpClient(object):
@@ -21,6 +22,7 @@ class KubernautHttpClient(object):
         )
 
     def claim(self, **kwargs):
+        method = "POST"
         url = "{0}/claims".format(self.base_url)
         headers = self.__create_headers()
 
@@ -29,56 +31,44 @@ class KubernautHttpClient(object):
             "pool": "default",  # this will be overridable eventually
         }
 
-        logger.debug(""">> POST %s
-
-%s""", url, self.__format_header_map(headers))
-
-        resp = requests.post(
-            url=url,
-            headers=self.__create_headers(),
-            json=payload,
-            timeout=2.000
-        )
-
-        logger.debug("""<< POST %s = %s
-
-%s
-
-%s
-""", url, resp.status_code, self.__format_header_map(resp.headers), resp.text)
-
+        resp = self.__send_request(method, url, headers, json=payload)
         return self.__handle_response(resp)
 
     def get_claim(self, name):
-        url = "{0}/claims/{1}".format(self.base_url, name)
-
-        resp = requests.get(
-            url=url,
-            headers=self.__create_headers(),
-            timeout=2.000
-        )
-
-        return resp.status_code, resp.headers, resp.text
-
-    def discard(self, name):
+        method = "GET"
         url = "{0}/claims/{1}".format(self.base_url, name)
         headers = self.__create_headers()
 
-        logger.debug(""">> DELETE %s
-
-%s""", url, self.__format_header_map(headers))
-
-        resp = requests.delete(
-            url=url,
-            headers=headers,
-            timeout=2.000
-        )
-
-        logger.debug("""<< DELETE %s = %s
-
-%s""", url, resp.status_code, self.__format_header_map(resp.headers))
-
+        resp = self.__send_request(method, url, headers)
         return self.__handle_response(resp)
+
+    def discard(self, name):
+        method = "DELETE"
+        url = "{0}/claims/{1}".format(self.base_url, name)
+        headers = self.__create_headers()
+
+        resp = self.__send_request(method, url, headers)
+        return self.__handle_response(resp)
+
+    def __send_request(self, method, url, headers, json=None):
+        timeout = 2.000 # make this configurable somehow
+        method = method.upper()
+        log_http_request(method, url, headers)
+
+        if method == "GET":
+            resp = requests.get(url=url, headers=headers, timeout=timeout)
+        elif method == "POST":
+            resp = requests.post(url=url, headers=headers, timeout=timeout, json=json)
+        elif method == "PUT":
+            resp = requests.put(url=url, headers=headers, timeout=timeout, json=json)
+        elif method == "DELETE":
+            resp = requests.delete(url=url, headers=headers, timeout=timeout, json=json)
+        else:
+            # would prefer to just use this code... but it's a PITA to mock with requests-mock
+            resp = requests.request(method=method, url=url, headers=headers, timeout=timeout, json=json)
+
+        log_http_response(resp)
+        return resp
 
     def __handle_response(self, resp):
         status = resp.status_code
@@ -93,14 +83,3 @@ class KubernautHttpClient(object):
             "Authorization": "Bearer {0}".format(self.api_token),
             "User-Agent": "kubernaut/{0}".format(__version__)
         }
-
-    def __format_header_map(self, headers):
-
-        res = "{:<20} {:<100}\n\n".format('Key', 'Value')
-        for k, v in sorted(headers.items()):
-            if k == "Authorization":
-                v = "<REDACTED>"
-
-            res += "{:<20} {:<100}\n".format(k, v)
-
-        return res
