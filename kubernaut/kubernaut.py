@@ -113,11 +113,11 @@ class Kubernaut(object):
             json.dump(self.config, f, indent=2)
 
     def new_http_client(self):
-        from kubernaut.messages import GET_TOKEN_MSG
+        from kubernaut.messages import GET_TOKEN
 
         return KubernautHttpClient(
             remote_addr=self.remote_addr,
-            api_token=self.get_config_value("token", required=True, required_msg=GET_TOKEN_MSG)
+            api_token=self.get_config_value("token", required=True, required_msg=GET_TOKEN)
         )
 
 

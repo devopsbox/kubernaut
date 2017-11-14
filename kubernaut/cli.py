@@ -11,17 +11,13 @@ from . import DEFAULT_REMOTE_API_ADDR
 from .claims import commands as claims
 from .auth import commands as auth
 from .kubernaut import new_kubernaut
-from urllib.parse import urlparse, urlsplit
+from .messages import VERSION_OUTDATED
+from urllib.parse import urlparse
 
 PROGRAM_NAME = "kubernaut"
 
 scout = Scout(PROGRAM_NAME, __version__)
-#scout_result = scout.report()
-scout_result = {}
-
-VERSION_OUTDATED_MSG = "Your version of %(prog)s is out of date! The latest version is {0}." + \
-                       " Please go to " + click.style("https://github.com/datawire/kubernaut", underline=True) + \
-                       " for update instructions."
+scout_result = scout.report()
 
 
 def create_version_message():
@@ -29,7 +25,7 @@ def create_version_message():
 
     latest_version = scout_result.get("latest_version")
     if is_outdated():
-        msg += "\n\n" + VERSION_OUTDATED_MSG.format(latest_version)
+        msg += "\n\n" + VERSION_OUTDATED.format(latest_version)
 
     return msg
 
@@ -56,7 +52,7 @@ def cli(ctx, kubernaut_host):
     config_root = Path.home() / ".config" / "kubernaut"
 
     if is_outdated():
-        click.echo(VERSION_OUTDATED_MSG.format(scout_result.get("latest_version")))
+        click.echo(VERSION_OUTDATED.format(scout_result.get("latest_version")))
 
     if not kubernaut_host.startswith("http://") or not kubernaut_host.startswith("https://"):
         scheme = ("https" if use_https else "http")
