@@ -1,0 +1,5 @@
+Error: Description returned from the server
+
+Status     => 404 -- Claim.NotFound
+ID         => NOT IMPORTANT
+

@@ -9,13 +9,13 @@ from uuid import uuid4
 
 
 client_msg_template = """{0}
-    
+
 Stacktrace => {1}
 ID         => {2}  
 """
 
 service_msg_template = """{0}
-    
+
 Status     => {1} -- {2}
 ID         => {3}
 """

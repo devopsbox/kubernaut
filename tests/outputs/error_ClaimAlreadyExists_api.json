@@ -1,0 +1,7 @@
+{
+  "error": {
+    "code": "Claim.AlreadyExists",
+    "description": "Description returned from the server",
+    "id": "NOT IMPORTANT"
+  }
+}

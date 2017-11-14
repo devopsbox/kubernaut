@@ -1,0 +1,5 @@
+Error: Description returned from the server
+
+Status     => 409 -- Claim.AlreadyExists
+ID         => NOT IMPORTANT
+

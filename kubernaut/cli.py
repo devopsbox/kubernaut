@@ -67,5 +67,6 @@ def cli(ctx, kubernaut_host):
 
 cli.add_command(claims.claim)
 cli.add_command(claims.discard)
+cli.add_command(claims.get_kubeconfig)
 cli.add_command(auth.cli_get_token)
 cli.add_command(auth.cli_set_token)
