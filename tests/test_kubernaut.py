@@ -81,7 +81,7 @@ def test_successful_claim(tmpdir, monkeypatch, shell, **kwargs):
 
 
 @requests_mock.Mocker(kw="mocker")
-def test_cli_kubeconfig_claim_already_exists_graceful_failure(tmpdir, monkeypatch, **kwargs):
+def test_cli_claim_already_exists_graceful_failure(tmpdir, monkeypatch, **kwargs):
     monkeypatch.setattr("pathlib2.Path.home", lambda: pathlib2.Path(str(tmpdir)))
 
     kwargs["mocker"].post(
