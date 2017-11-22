@@ -51,7 +51,7 @@ class KubernautHttpClient(object):
         return self.__handle_response(resp)
 
     def __send_request(self, method, url, headers, json=None):
-        timeout = 2.000 # make this configurable somehow
+        timeout = 10.000 # make this configurable somehow
         method = method.upper()
         log_http_request(method, url, headers)
 
